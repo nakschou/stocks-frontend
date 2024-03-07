@@ -5,13 +5,14 @@ import { CardTitle, CardDescription, CardHeader, CardContent, Card } from "@/com
 import { Skeleton } from "@/components/ui/skeleton"
 
 
-export function CompanyOverview( { params } ) {
+export function CompanyOverview( { } ) {
 
     const [data, setData] = React.useState(null); // Use the interface
     const [isLoading, setIsLoading] =  React.useState(true);
     const [error, setError] =  React.useState<Error | null>(null);
     const ALPHAVANTAGE_API_KEY = process.env.ALPHAVANTAGE_API_KEY;
-    const url = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${params.ticker}&apikey=${ALPHAVANTAGE_API_KEY}`
+    // const url = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${params.ticker}&apikey=${ALPHAVANTAGE_API_KEY}`
+    const url = "https://www.alphavantage.co/query?function=OVERVIEW&symbol=IBM&apikey=demo"
 
     React.useEffect(() => {
         const fetchData = async () => {
@@ -21,15 +22,6 @@ export function CompanyOverview( { params } ) {
               throw new Error('Network response was not ok');
             }
             const data = await response.json();
-            const symbol = data?.Symbol;
-            const description = data?.Description;
-            const name = data?.Name;
-            const assetType = data?.AssetType;
-            const country = data?.Country;
-            const sector = data?.Sector.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});;
-            const industry = data?.Industry.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
-            const marketCapitalization = data?.MarketCapitalization;
-            const formattedMarketCap = convert_to_illions(marketCapitalization); 
             setData(data);
             setIsLoading(false);
           } catch (error) {
@@ -40,7 +32,7 @@ export function CompanyOverview( { params } ) {
         };
     
         fetchData();
-      }, [params.ticker]);
+      }, []);
 
       console.log(data);
 
@@ -94,31 +86,31 @@ export function CompanyOverview( { params } ) {
 
     } else {
         return (
-            <Card className="w-full max-w-sm">
+            <Card className="w-full max-w">
             <CardHeader className="pb-4">
-                <CardTitle className="text-3xl font-bold leading-none">{symbol}</CardTitle>
-                <CardDescription className="text-sm font-medium">{assetType}</CardDescription>
+                <CardTitle className="text-3xl font-bold leading-none">{data?.Symbol ?? 'N/A'}</CardTitle>
+                <CardDescription className="text-sm font-medium">{data?.AssetType ?? 'N/A'}</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
-                <p className="text-sm font-medium">{name}</p>
-                <p className="text-xs">{description}</p>
+                <p className="text-sm font-medium">{data?.Name ?? 'N/A'}</p>
+                <p className="text-xs">{data?.Description ?? 'N/A'}</p>
                 <div className="border-t border-b py-2">
                 <div className="grid grid-cols-2 gap-1 text-xs">
                     <div className="flex items-center gap-1">
                     <HomeIcon className="w-4 h-4" />
-                    <span>{country}</span>
+                    <span>{data?.Country ?? 'N/A'}</span>
                     </div>
                     <div className="flex items-center gap-1">
                     <GlobeIcon className="w-4 h-4" />
-                    <span>{sector}</span>
+                    <span>{data?.Sector.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();}) ?? 'N/A'}</span>
                     </div>
                     <div className="flex items-center gap-1">
                     <ActivityIcon className="w-4 h-4" />
-                    <span>{industry}</span>
+                    <span>{data?.Industry.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();}) ?? 'N/A'}</span>
                     </div>
                     <div className="flex items-center gap-1">
                     <DollarSignIcon className="w-4 h-4" />
-                    <span>{formattedMarketCap}</span>
+                    <span>{convert_to_illions(data?.MarketCapitalization) ?? 'N/A'}</span>
                     </div>
                 </div>
                 </div>
