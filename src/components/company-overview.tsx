@@ -1,19 +1,20 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { CardTitle, CardDescription, CardHeader, CardContent, Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useRouter } from "next/navigation";
 
 
-export function CompanyOverview( { } ) {
-
+export function CompanyOverview( { params } ) {
+    const router = useRouter();
     const [data, setData] = React.useState(null); // Use the interface
     const [isLoading, setIsLoading] =  React.useState(true);
-    const [error, setError] =  React.useState<Error | null>(null);
     const ALPHAVANTAGE_API_KEY = process.env.ALPHAVANTAGE_API_KEY;
-    // const url = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${params.ticker}&apikey=${ALPHAVANTAGE_API_KEY}`
-    const url = "https://www.alphavantage.co/query?function=OVERVIEW&symbol=IBM&apikey=demo"
+    const url = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${params.ticker}&apikey=${ALPHAVANTAGE_API_KEY}`
+    // const url = "https://www.alphavantage.co/query?function=OVERVIEW&symbol=IBM&apikey=demo"
 
+    // effect for fetching data
     React.useEffect(() => {
         const fetchData = async () => {
           try {
@@ -22,17 +23,18 @@ export function CompanyOverview( { } ) {
               throw new Error('Network response was not ok');
             }
             const data = await response.json();
+            if(data === undefined || data["Information"]) {
+                throw new Error('Data is undefined');
+            }
             setData(data);
             setIsLoading(false);
           } catch (error) {
-            if (error instanceof Error) {
-              setError(error);
-            }
+            router.push("/stock-details/invalid-search");
           }
         };
     
         fetchData();
-      }, []);
+      }, [params.ticker]);
 
       console.log(data);
 
@@ -49,34 +51,34 @@ export function CompanyOverview( { } ) {
             return value;
         }
     }
-    console.log(isLoading);
+    //loading screen
     if (isLoading) {
         return (
-            <Card className="w-full max-w-sm">
+            <Card className="w-full max-w">
             <CardHeader className="pb-4">
-                <Skeleton className="h-3 w-[]" />
-                <Skeleton className="h-2 w-[]" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-2 w-full" />
             </CardHeader>
             <CardContent className="grid gap-4">
-                <Skeleton className="h-2 w-[]" />
-                <Skeleton className="h-12 w-[]" />
+                <Skeleton className="h-2 w-full" />
+                <Skeleton className="h-12 w-full" />
                 <div className="border-t border-b py-2">
                 <div className="grid grid-cols-2 gap-1 text-xs">
                     <div className="flex items-center gap-1">
                         <HomeIcon className="w-4 h-4" />
-                        <Skeleton className="h-2 w-[]" />
+                        <Skeleton className="h-2 w-full" />
                     </div>
                     <div className="flex items-center gap-1">
                         <GlobeIcon className="w-4 h-4" />
-                        <Skeleton className="h-2 w-[]" />
+                        <Skeleton className="h-2 w-full" />
                     </div>
                     <div className="flex items-center gap-1">
                         <ActivityIcon className="w-4 h-4" />
-                        <Skeleton className="h-2 w-[]" />
+                        <Skeleton className="h-2 w-full" />
                     </div>
                     <div className="flex items-center gap-1">
                         <DollarSignIcon className="w-4 h-4" />
-                        <Skeleton className="h-2 w-[]" />
+                        <Skeleton className="h-2 w-full" />
                     </div>
                 </div>
                 </div>
@@ -102,12 +104,23 @@ export function CompanyOverview( { } ) {
                     </div>
                     <div className="flex items-center gap-1">
                     <GlobeIcon className="w-4 h-4" />
-                    <span>{data?.Sector.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();}) ?? 'N/A'}</span>
+                    <span>{
+                      data?.Sector
+                        ? data.Sector.replace(/\w\S*/g, function(txt){
+                            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+                          })
+                        : 'N/A'
+                    }</span>
                     </div>
                     <div className="flex items-center gap-1">
                     <ActivityIcon className="w-4 h-4" />
-                    <span>{data?.Industry.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();}) ?? 'N/A'}</span>
-                    </div>
+                    <span>{
+                      data?.Industry
+                        ? data.Industry.replace(/\w\S*/g, function(txt){
+                            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+                          })
+                        : 'N/A'
+                    }</span>                    </div>
                     <div className="flex items-center gap-1">
                     <DollarSignIcon className="w-4 h-4" />
                     <span>{convert_to_illions(data?.MarketCapitalization) ?? 'N/A'}</span>

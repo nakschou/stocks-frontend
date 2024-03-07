@@ -14,9 +14,11 @@ import {
     PopoverContent,
     PopoverTrigger,
   } from "@/components/ui/popover"
+import { useRouter } from "next/navigation";
 
-export default function HistoricalData() {
+export default function HistoricalData({params}) {
 
+    const router = useRouter();
     const [filteredData, setFilteredData] = React.useState(null); // Use the interface
     const [chartData, setChartData] = React.useState(null); // Use the interface
     const [jsonData, setData] = React.useState(null); // Use the interface
@@ -24,44 +26,48 @@ export default function HistoricalData() {
     const [startDate, setStartDate] = React.useState(Date.now()-12096e5);
     const [endDate, setEndDate] = React.useState(Date.now());
     const [error, setError] =  React.useState<Error | null>(null);
+    const ALPHAVANTAGE_API_KEY = process.env.ALPHAVANTAGE_API_KEY;
+    const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${params.ticker}&outputsize=full&apikey=${ALPHAVANTAGE_API_KEY}`
+    // const url = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=IBM&apikey=demo"
 
     React.useEffect(() => {
         const fetchData = async () => {
           try {
             // Ensure the path to the JSON file is correct. Assuming the file is in the public directory
-            const response = await fetch('https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=IBM&outputsize=full&apikey=demo');
+            const response = await fetch(url);
             if (!response.ok) {
               throw new Error('Network response was not ok');
             }
             const data = await response.json();
+            console.log(data);
+            if(data === undefined || data["Information"]) {
+                throw new Error('Data is undefined');
+            }
             setData(data);
           } catch (error) {
-            if (error instanceof Error) {
-              setError(error);
-            }
+            router.push("/stock-details/invalid-search");
           }
         };
       
         fetchData();
-      }, []);
-    
-      React.useEffect(() => {
-        if (!jsonData) return; // Make sure jsonData is loaded
+      }, [params.ticker]);
       
-        // Logic to filter data based on startDate
+      // detect changes in startDate and jsonData
+      React.useEffect(() => {
+        if (!jsonData) return;
+      
         const filteredData = Object.entries(jsonData["Time Series (Daily)"]).map(([date, info], index) => ({
-          id: index + 1,
           date,
           open: info["1. open"],
           close: info["4. close"],
           high: info["2. high"],
           low: info["3. low"],
           volume: info["5. volume"],
-        })).filter(segment => new Date(segment.date) >= startDate);
+        })).filter(segment => (new Date(segment.date) >= startDate && new Date(segment.date) <= endDate));
       
         // Update your state with the filtered data
         // Assuming you have a state to hold the filtered data for rendering
-        setFilteredData(filteredData); // If you're directly using jsonData, consider using a new state variable for filtered results
+        setFilteredData(filteredData);
         const chartData = [
             {
                 id: "Stock Price",
@@ -73,7 +79,7 @@ export default function HistoricalData() {
         ];
         setChartData(chartData);
         setIsLoading(false);
-      }, [startDate, jsonData]);
+      }, [startDate, endDate, jsonData]);
 
     if(isLoading) {
         return (

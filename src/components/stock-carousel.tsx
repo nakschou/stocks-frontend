@@ -69,7 +69,7 @@ export function StockCarousel( { data } ) {
                             <span className="text-md font-bold">{stock.name}</span>
                             <span className="text-sm text-gray-500">{stock.ticker}</span>
                             <Button asChild>
-                                <Link href={`/${stock.ticker}`}>View Details</Link>
+                                <Link href={`/stock-details/${stock.ticker}`}>View Details</Link>
                             </Button>
                         </CardContent>
                         </Card>
